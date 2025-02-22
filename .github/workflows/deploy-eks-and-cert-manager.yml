@@ -128,15 +128,7 @@ jobs:
           sleep 15
           kubectl delete -f k8manifests/nginx-ingress.yaml
 
-      - name: Uninstall Cert-Manager
-        run: |
-          sleep 15
-          kubectl delete -f https://github.com/jetstack/cert-manager/releases/download/v1.10.1/cert-manager.yaml
-          sleep 60
-          kubectl delete -f k8manifests/cluster-issuer.yaml
-          sleep 15
-          kubectl delete -f k8manifests/certificate.yaml
-
+      
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
 

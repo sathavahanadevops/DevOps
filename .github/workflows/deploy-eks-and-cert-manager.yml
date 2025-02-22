@@ -2,6 +2,12 @@ name: Deploy EKS Cluster and Install Cert-Manager
 
 on:
   workflow_dispatch:
+    inputs:
+      destroy:
+        description: "Destroy the EKS Cluster"
+        required: false
+        default: "false"
+        type: boolean
 
 jobs:
   deploy:
@@ -10,6 +16,13 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
@@ -71,8 +84,13 @@ jobs:
           kubectl apply -f k8manifests/cluster-issuer.yaml
           kubectl apply -f k8manifests/certificate.yaml
 
+      - name: Verify Cert-Manager
+        run: |
+          kubectl get pods -n cert-manager
+          kubectl get crds | grep cert-manager
+
   destroy:
-    name: Destroy EKS Cluster using Terraform
+    name: Destroy EKS Cluster and Uninstall Components
     runs-on: ubuntu-latest
     if: github.event.inputs.destroy == 'true'
     environment:
@@ -80,6 +98,32 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Export Kubeconfig
+        run: |
+          aws eks update-kubeconfig --name devops-demo --region us-east-1
+
+      - name: Uninstall Ingress Nginx
+        run: |
+          helm uninstall ingress-nginx -n default
+
+      - name: Delete Nginx and Ingress Resources
+        run: |
+          kubectl delete -f k8manifests/nginx-deployment-service.yaml
+          kubectl delete -f k8manifests/nginx-ingress.yaml
+
+      - name: Uninstall Cert-Manager
+        run: |
+          kubectl delete -f https://github.com/jetstack/cert-manager/releases/download/v1.10.1/cert-manager.yaml
+          kubectl delete -f k8manifests/cluster-issuer.yaml
+          kubectl delete -f k8manifests/certificate.yaml
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2

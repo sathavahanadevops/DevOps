@@ -41,17 +41,20 @@ jobs:
 
       - name: Install Ingress Nginx using Helm
         run: |
+          sleep 60
           helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
           helm repo update
           helm install ingress-nginx ingress-nginx/ingress-nginx --namespace default
 
       - name: Deploy Nginx and Ingress
         run: |
+          sleep 60
           kubectl apply -f k8manifests/nginx-deployment-service.yaml
           kubectl apply -f k8manifests/nginx-ingress.yaml
 
       - name: Verify Deployments and Ingress
         run: |
+          sleep 60
           kubectl get pods -A
           kubectl get ingress -A
           kubectl get svc -A
@@ -79,6 +82,7 @@ jobs:
 
       - name: Install Cert-Manager
         run: |
+          sleep 60
           echo "Proceeding with Cert-Manager installation..."
           kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.10.1/cert-manager.yaml
           kubectl apply -f k8manifests/cluster-issuer.yaml
@@ -86,6 +90,7 @@ jobs:
 
       - name: Verify Cert-Manager
         run: |
+          sleep 60
           kubectl get pods -n cert-manager
           kubectl get crds | grep cert-manager
 

@@ -85,7 +85,9 @@ jobs:
           sleep 60
           echo "Proceeding with Cert-Manager installation..."
           kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.10.1/cert-manager.yaml
+          sleep 60
           kubectl apply -f k8manifests/cluster-issuer.yaml
+          sleep 30
           kubectl apply -f k8manifests/certificate.yaml
 
       - name: Verify Cert-Manager
@@ -121,13 +123,18 @@ jobs:
 
       - name: Delete Nginx and Ingress Resources
         run: |
+          sleep 15
           kubectl delete -f k8manifests/nginx-deployment-service.yaml
+          sleep 15
           kubectl delete -f k8manifests/nginx-ingress.yaml
 
       - name: Uninstall Cert-Manager
         run: |
+          sleep 15
           kubectl delete -f https://github.com/jetstack/cert-manager/releases/download/v1.10.1/cert-manager.yaml
+          sleep 60
           kubectl delete -f k8manifests/cluster-issuer.yaml
+          sleep 15
           kubectl delete -f k8manifests/certificate.yaml
 
       - name: Set up Terraform
